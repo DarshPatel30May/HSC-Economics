@@ -223,6 +223,53 @@ export function StudyNotes({
           )}
         </div>
 
+        {/* ── Section progress rail ─────────────────────── */}
+        {!search && (
+          <div className={`mb-4 p-3 rounded-xl border ${isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? "text-slate-600" : "text-slate-400"}`}>
+                {state.currentTopic === "topic1" ? "Topic 1" : "Topic 4"} — {currentIdx + 1} of {allSections.length}
+              </span>
+              <div className="flex items-center gap-3">
+                {[
+                  { color: "bg-emerald-500", label: "Done" },
+                  { color: "bg-amber-500", label: "Review" },
+                  { color: "bg-cyan-500/40", label: "Current" },
+                ].map(l => (
+                  <div key={l.label} className="flex items-center gap-1">
+                    <div className={`w-2 h-2 rounded-full ${l.color}`} />
+                    <span className={`text-[9px] ${isDark ? "text-slate-600" : "text-slate-400"}`}>{l.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-1 flex-wrap">
+              {allSections.map((s) => {
+                const p = getSectionProgress(s.id);
+                const isCurrent = s.id === currentSectionId;
+                return (
+                  <button
+                    key={s.id}
+                    title={s.title}
+                    onClick={() => setCurrentSection(s.id)}
+                    className={`h-2 flex-1 min-w-[8px] rounded-full transition-all hover:opacity-80 ${
+                      isCurrent
+                        ? "bg-gradient-to-r from-cyan-500 to-blue-500 scale-y-[1.5]"
+                        : p?.completed
+                        ? "bg-emerald-500"
+                        : p?.confused && !p?.completed
+                        ? "bg-amber-500"
+                        : p?.quizAttempted
+                        ? isDark ? "bg-slate-600" : "bg-slate-300"
+                        : isDark ? "bg-slate-800" : "bg-slate-100"
+                    }`}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* ── Search results ────────────────────────────── */}
         {search && filteredSections ? (
           <div className="space-y-3">
@@ -323,9 +370,12 @@ export function StudyNotes({
             </motion.div>
 
             {/* ── Cause & Effect chain ──────────────────── */}
-            <div className={`rounded-xl border-l-4 border-l-cyan-500 p-4 ${isDark ? "bg-cyan-500/5 border border-cyan-500/15 border-l-cyan-500" : "bg-cyan-50 border border-cyan-200 border-l-cyan-500"}`}>
+            <div className={`rounded-xl border-l-4 border-l-cyan-500 p-4 relative overflow-hidden ${isDark ? "bg-cyan-500/5 border border-cyan-500/15 border-l-cyan-500" : "bg-cyan-50 border border-cyan-200 border-l-cyan-500"}`}>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
               <div className="flex items-center gap-2 mb-2">
-                <ArrowRight size={14} className="text-cyan-400" />
+                <div className="p-1 rounded-md bg-cyan-500/15 border border-cyan-500/25">
+                  <ArrowRight size={12} className="text-cyan-400" />
+                </div>
                 <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-widest">Cause & Effect Chain</h3>
               </div>
               <p className={`text-xs leading-relaxed font-medium ${isDark ? "text-slate-300" : "text-slate-700"}`}>{currentSection.causeEffect}</p>
@@ -386,9 +436,12 @@ export function StudyNotes({
             </div>
 
             {/* ── HSC Exam Link ─────────────────────────── */}
-            <div className={`rounded-xl border-l-4 border-l-amber-500 p-4 ${isDark ? "bg-amber-500/5 border border-amber-500/15 border-l-amber-500" : "bg-amber-50 border border-amber-200 border-l-amber-500"}`}>
+            <div className={`rounded-xl border-l-4 border-l-amber-500 p-4 relative overflow-hidden ${isDark ? "bg-amber-500/5 border border-amber-500/15 border-l-amber-500" : "bg-amber-50 border border-amber-200 border-l-amber-500"}`}>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
               <div className="flex items-center gap-2 mb-2">
-                <Lightbulb size={14} className="text-amber-400" />
+                <div className="p-1 rounded-md bg-amber-500/15 border border-amber-500/25">
+                  <Lightbulb size={12} className="text-amber-400" />
+                </div>
                 <h3 className="text-xs font-bold text-amber-400 uppercase tracking-widest">HSC Exam Tip</h3>
               </div>
               <p className={`text-xs leading-relaxed font-medium ${isDark ? "text-slate-300" : "text-slate-700"}`}>{currentSection.examLink}</p>
@@ -448,34 +501,41 @@ export function StudyNotes({
             </div>
 
             {/* ── Section navigation ────────────────────── */}
-            <div className="flex items-center justify-between pt-1 gap-3">
+            <div className={`flex items-center justify-between pt-2 gap-3 border-t ${isDark ? "border-slate-800" : "border-slate-100"}`}>
               {prevSection ? (
-                <button
+                <motion.button
+                  whileHover={{ x: -2 }}
                   onClick={() => setCurrentSection(prevSection.id)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-semibold transition-all group ${
                     isDark
                       ? "border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200 hover:bg-slate-900"
                       : "border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-800 hover:bg-white"
                   }`}
                 >
-                  <ArrowLeft size={13} />
-                  <span className="hidden sm:inline">{prevSection.title}</span>
+                  <ArrowLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" />
+                  <div className="text-left hidden sm:block">
+                    <div className={`text-[9px] uppercase tracking-widest mb-0.5 ${isDark ? "text-slate-600" : "text-slate-400"}`}>Previous</div>
+                    <div className="truncate max-w-[120px]">{prevSection.title}</div>
+                  </div>
                   <span className="sm:hidden">Previous</span>
-                </button>
+                </motion.button>
               ) : <div />}
+              <span className={`text-[10px] font-bold tabular-nums ${isDark ? "text-slate-700" : "text-slate-300"}`}>
+                {currentIdx + 1} / {allSections.length}
+              </span>
               {nextSection ? (
-                <button
+                <motion.button
+                  whileHover={{ x: 2 }}
                   onClick={() => setCurrentSection(nextSection.id)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
-                    isDark
-                      ? "border-slate-800 text-slate-400 hover:border-cyan-500/30 hover:text-cyan-400 hover:bg-slate-900"
-                      : "border-slate-200 text-slate-500 hover:border-cyan-300 hover:text-cyan-600 hover:bg-white"
-                  }`}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-blue-500 group"
                 >
-                  <span className="hidden sm:inline">{nextSection.title}</span>
+                  <div className="text-right hidden sm:block">
+                    <div className="text-[9px] uppercase tracking-widest mb-0.5 text-cyan-100/70">Next</div>
+                    <div className="truncate max-w-[120px]">{nextSection.title}</div>
+                  </div>
                   <span className="sm:hidden">Next</span>
-                  <ArrowRight size={13} />
-                </button>
+                  <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+                </motion.button>
               ) : <div />}
             </div>
 
