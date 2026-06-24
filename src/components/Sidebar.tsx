@@ -1,0 +1,151 @@
+import {
+  LayoutDashboard,
+  BookOpen,
+  BookMarked,
+  PenTool,
+  AlignLeft,
+  Sun,
+  Moon,
+  RotateCcw,
+  GraduationCap,
+} from "lucide-react";
+import { topic4Sections } from "../data/topic4Content";
+import * as LucideIcons from "lucide-react";
+import type { AppState } from "../hooks/useAppState";
+
+type PageType = "dashboard" | "study" | "glossary" | "essay-planner" | "paragraph-builder";
+
+interface SidebarProps {
+  currentPage: PageType;
+  setCurrentPage: (page: PageType) => void;
+  state: AppState;
+  toggleTheme: () => void;
+  resetName: () => void;
+  currentSectionId: string;
+  setCurrentSection: (id: string) => void;
+}
+
+const navItems = [
+  { id: "dashboard" as PageType, label: "Dashboard", icon: LayoutDashboard },
+  { id: "study" as PageType, label: "Study Notes", icon: BookOpen },
+  { id: "glossary" as PageType, label: "Glossary", icon: BookMarked },
+  { id: "essay-planner" as PageType, label: "Essay Planner", icon: PenTool },
+  { id: "paragraph-builder" as PageType, label: "Paragraph Builder", icon: AlignLeft },
+];
+
+export function Sidebar({
+  currentPage,
+  setCurrentPage,
+  state,
+  toggleTheme,
+  resetName,
+  currentSectionId,
+  setCurrentSection,
+}: SidebarProps) {
+  const isDark = state.theme === "dark";
+
+  return (
+    <aside
+      className={`hidden lg:flex flex-col w-64 shrink-0 h-screen sticky top-0 border-r overflow-y-auto ${
+        isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
+      }`}
+    >
+      {/* Logo */}
+      <div className={`px-5 py-5 border-b ${isDark ? "border-slate-800" : "border-slate-100"}`}>
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600">
+            <GraduationCap size={18} className="text-white" />
+          </div>
+          <div>
+            <h1 className="font-bold text-sm gradient-text">EcoPilot HSC</h1>
+            <p className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>Topic 4 · Economics</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main nav */}
+      <nav className="px-3 pt-4 space-y-0.5">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentPage === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setCurrentPage(item.id)}
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                isActive
+                  ? "bg-gradient-to-r from-cyan-500/20 to-blue-500/10 text-cyan-400 border border-cyan-500/20"
+                  : isDark
+                  ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+              }`}
+            >
+              <Icon size={16} />
+              {item.label}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Section list */}
+      {currentPage === "study" && (
+        <div className={`mt-4 px-3 border-t pt-4 ${isDark ? "border-slate-800" : "border-slate-100"}`}>
+          <p className={`px-3 text-xs font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+            Sections
+          </p>
+          <div className="space-y-0.5">
+            {topic4Sections.map((section) => {
+              const IconComp = (LucideIcons as unknown as Record<string, React.ElementType>)[section.icon] || BookOpen;
+              const progress = state.sectionProgress[section.id];
+              const isActive = currentSectionId === section.id;
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => setCurrentSection(section.id)}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all ${
+                    isActive
+                      ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/15"
+                      : isDark
+                      ? "text-slate-500 hover:text-slate-300 hover:bg-slate-800"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <IconComp size={13} className="shrink-0" />
+                  <span className="truncate text-left">{section.title}</span>
+                  {progress?.completed && (
+                    <span className="ml-auto shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  )}
+                  {progress?.confused && !progress.completed && (
+                    <span className="ml-auto shrink-0 w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className={`mt-auto px-3 pb-4 pt-4 border-t space-y-0.5 ${isDark ? "border-slate-800" : "border-slate-100"}`}>
+        <button
+          onClick={toggleTheme}
+          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all ${
+            isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+          }`}
+        >
+          {isDark ? <Sun size={16} /> : <Moon size={16} />}
+          {isDark ? "Light mode" : "Dark mode"}
+        </button>
+        <button
+          onClick={resetName}
+          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all ${
+            isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+          }`}
+        >
+          <RotateCcw size={16} />
+          Change name
+        </button>
+      </div>
+    </aside>
+  );
+}

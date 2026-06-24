@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
+}
+
+@layer components {
+  .glass {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+  }
+
+  .glass-light {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+  }
+
+  .card-hover {
+    transition: all 0.2s ease;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-2px);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-text-gold {
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .prose-dark h3 {
+    color: #e2e8f0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .prose-dark p {
+    color: #94a3b8;
+    line-height: 1.7;
+    margin-bottom: 0.75rem;
+  }
+
+  .prose-dark ul {
+    color: #94a3b8;
+    padding-left: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .prose-dark li {
+    margin-bottom: 0.3rem;
+    line-height: 1.6;
+  }
+
+  .prose-dark strong {
+    color: #cbd5e1;
+    font-weight: 600;
+  }
+
+  .prose-light h3 {
+    color: #1e293b;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .prose-light p {
+    color: #475569;
+    line-height: 1.7;
+    margin-bottom: 0.75rem;
+  }
+
+  .prose-light ul {
+    color: #475569;
+    padding-left: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .prose-light li {
+    margin-bottom: 0.3rem;
+    line-height: 1.6;
+  }
+
+  .prose-light strong {
+    color: #1e293b;
+    font-weight: 600;
+  }
+}
