@@ -9,11 +9,14 @@ import {
   AlertCircle,
   TrendingUp,
   BookOpen,
+  Globe,
+  Building2,
 } from "lucide-react";
 import { topic4Sections } from "../data/topic4Content";
+import { topic1Sections } from "../data/topic1Content";
 import * as LucideIcons from "lucide-react";
 import { ProgressRing } from "../components/ProgressRing";
-import type { AppState } from "../hooks/useAppState";
+import type { AppState, TopicId } from "../hooks/useAppState";
 import {
   BarChart,
   Bar,
@@ -28,42 +31,59 @@ type PageType = "dashboard" | "study" | "glossary" | "essay-planner" | "paragrap
 interface DashboardProps {
   state: AppState;
   getCompletionPercentage: () => number;
+  getCompletionPercentageForTopic: (topicId: TopicId) => number;
   getCompletedCount: () => number;
   getNotesCount: () => number;
   getWeakestSection: () => typeof topic4Sections[0] | null;
   getNextIncompleteSection: () => typeof topic4Sections[0] | null;
   setCurrentPage: (page: PageType) => void;
   setCurrentSection: (id: string) => void;
+  setCurrentTopic: (topic: TopicId) => void;
 }
 
 export function Dashboard({
   state,
   getCompletionPercentage,
+  getCompletionPercentageForTopic,
   getCompletedCount,
   getNotesCount,
   getWeakestSection,
   getNextIncompleteSection,
   setCurrentPage,
   setCurrentSection,
+  setCurrentTopic,
 }: DashboardProps) {
   const isDark = state.theme === "dark";
   const percentage = getCompletionPercentage();
   const completed = getCompletedCount();
-  const total = topic4Sections.length;
+  const currentSections = state.currentTopic === "topic1" ? topic1Sections : topic4Sections;
+  const total = currentSections.length;
   const weakest = getWeakestSection();
   const nextSection = getNextIncompleteSection();
 
-  const chartData = topic4Sections.map((s) => ({
-    name: s.title.split(" ").slice(0, 2).join(" "),
-    value: state.sectionProgress[s.id]?.completed ? 100 : state.sectionProgress[s.id]?.quizScore > 0 ? 50 : 0,
-    completed: state.sectionProgress[s.id]?.completed,
-  }));
+  const topic1Pct = getCompletionPercentageForTopic("topic1");
+  const topic4Pct = getCompletionPercentageForTopic("topic4");
+
+  const chartData = currentSections.map((s) => {
+    const key = `${state.currentTopic}:${s.id}`;
+    const prog = state.sectionProgress[key];
+    return {
+      name: s.title.split(" ").slice(0, 2).join(" "),
+      value: prog?.completed ? 100 : prog?.quizScore > 0 ? 50 : 0,
+      completed: prog?.completed,
+    };
+  });
 
   const handleContinue = () => {
     if (nextSection) {
       setCurrentSection(nextSection.id);
       setCurrentPage("study");
     }
+  };
+
+  const handleTopicStudy = (topicId: TopicId) => {
+    setCurrentTopic(topicId);
+    setCurrentPage("study");
   };
 
   return (
@@ -81,7 +101,7 @@ export function Dashboard({
           <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <p className={`text-sm ${isDark ? "text-slate-500" : "text-slate-400"}`}>Good study session,</p>
-              <h1 className="text-2xl font-bold text-white mt-0.5">
+              <h1 className="text-2xl font-bold mt-0.5">
                 {isDark ? (
                   <span className="text-white">{state.studentName} 👋</span>
                 ) : (
@@ -91,7 +111,7 @@ export function Dashboard({
               <p className={`text-sm mt-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                 {percentage === 100
                   ? "You've completed all sections! Review before your exam."
-                  : `You're ${percentage}% through Topic 4. Keep going!`}
+                  : `You're ${percentage}% through ${state.currentTopic === "topic1" ? "Topic 1" : "Topic 4"}. Keep going!`}
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -124,6 +144,95 @@ export function Dashboard({
             </motion.button>
           )}
         </motion.div>
+
+        {/* Topic Overview Cards */}
+        <div className="grid sm:grid-cols-2 gap-4">
+          {/* Topic 1 Card */}
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className={`rounded-2xl p-5 border relative overflow-hidden cursor-pointer transition-all hover:border-cyan-500/40 ${
+              isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
+            } ${state.currentTopic === "topic1" ? "ring-2 ring-cyan-500/40" : ""}`}
+            onClick={() => { setCurrentTopic("topic1"); }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-cyan-500/5 pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-lg bg-violet-500/20 border border-violet-500/30">
+                    <Globe size={16} className="text-violet-400" />
+                  </div>
+                  <div>
+                    <h3 className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-900"}`}>Topic 1</h3>
+                    <p className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>The Global Economy</p>
+                  </div>
+                </div>
+                <span className="text-lg font-bold text-violet-400">{topic1Pct}%</span>
+              </div>
+              <div className={`h-1.5 rounded-full mb-3 ${isDark ? "bg-slate-800" : "bg-slate-100"}`}>
+                <div
+                  className="h-1.5 rounded-full bg-gradient-to-r from-violet-500 to-cyan-500 transition-all"
+                  style={{ width: `${topic1Pct}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                  {topic1Sections.filter((s) => state.sectionProgress[`topic1:${s.id}`]?.completed).length}/{topic1Sections.length} sections
+                </span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleTopicStudy("topic1"); }}
+                  className="text-xs text-violet-400 hover:text-violet-300 flex items-center gap-1 transition-colors"
+                >
+                  Study <ArrowRight size={11} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Topic 4 Card */}
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className={`rounded-2xl p-5 border relative overflow-hidden cursor-pointer transition-all hover:border-cyan-500/40 ${
+              isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
+            } ${state.currentTopic === "topic4" ? "ring-2 ring-cyan-500/40" : ""}`}
+            onClick={() => { setCurrentTopic("topic4"); }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-emerald-500/5 pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-lg bg-cyan-500/20 border border-cyan-500/30">
+                    <Building2 size={16} className="text-cyan-400" />
+                  </div>
+                  <div>
+                    <h3 className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-900"}`}>Topic 4</h3>
+                    <p className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>Economic Policies</p>
+                  </div>
+                </div>
+                <span className="text-lg font-bold text-cyan-400">{topic4Pct}%</span>
+              </div>
+              <div className={`h-1.5 rounded-full mb-3 ${isDark ? "bg-slate-800" : "bg-slate-100"}`}>
+                <div
+                  className="h-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 transition-all"
+                  style={{ width: `${topic4Pct}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                  {topic4Sections.filter((s) => state.sectionProgress[`topic4:${s.id}`]?.completed).length}/{topic4Sections.length} sections
+                </span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleTopicStudy("topic4"); }}
+                  className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+                >
+                  Study <ArrowRight size={11} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
 
         {/* Quick stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -199,16 +308,19 @@ export function Dashboard({
           </motion.div>
         </div>
 
-        {/* Progress grid */}
+        {/* Progress grid for current topic */}
         <div>
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={16} className="text-cyan-400" />
-            <h2 className={`font-semibold text-sm ${isDark ? "text-slate-300" : "text-slate-700"}`}>Section Progress</h2>
+            <h2 className={`font-semibold text-sm ${isDark ? "text-slate-300" : "text-slate-700"}`}>
+              {state.currentTopic === "topic1" ? "Topic 1" : "Topic 4"} Section Progress
+            </h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {topic4Sections.map((section, i) => {
+            {currentSections.map((section, i) => {
               const IconComp = (LucideIcons as unknown as Record<string, React.ElementType>)[section.icon] || BookOpen;
-              const progress = state.sectionProgress[section.id];
+              const key = `${state.currentTopic}:${section.id}`;
+              const progress = state.sectionProgress[key];
               const isCompleted = progress?.completed;
               const isConfused = progress?.confused;
 
@@ -217,7 +329,7 @@ export function Dashboard({
                   key={section.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                  transition={{ delay: i * 0.04 }}
                   onClick={() => { setCurrentSection(section.id); setCurrentPage("study"); }}
                   className={`text-left p-4 rounded-xl border card-hover transition-all ${
                     isCompleted
@@ -262,7 +374,7 @@ export function Dashboard({
           className={`rounded-2xl p-5 border ${isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"}`}
         >
           <h3 className={`text-sm font-semibold mb-4 ${isDark ? "text-slate-300" : "text-slate-700"}`}>
-            Completion Overview
+            Completion Overview — {state.currentTopic === "topic1" ? "Topic 1" : "Topic 4"}
           </h3>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>

@@ -2,11 +2,14 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Bot, Sparkles, Copy, ExternalLink, ChevronDown } from "lucide-react";
 import { topic4Sections } from "../data/topic4Content";
+import { topic1Sections } from "../data/topic1Content";
+import type { TopicId } from "../hooks/useAppState";
 
 interface AIModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentSectionId?: string;
+  currentTopic: TopicId;
   onUse: () => void;
   addToast: (msg: string, type?: "success" | "info" | "error") => void;
 }
@@ -63,9 +66,15 @@ const aiPlatforms = [
   },
 ];
 
-function buildPrompt(question: string, responseType: string): string {
+const topicNames: Record<TopicId, string> = {
+  topic1: "Topic 1: The Global Economy",
+  topic4: "Topic 4: Economic Policies and Management",
+};
+
+function buildPrompt(question: string, responseType: string, topicName: string, sectionTitle?: string): string {
   const rtLabel = responseTypes.find((r) => r.value === responseType)?.label || responseType;
-  return `Act as an expert NSW Year 12 HSC Economics teacher. I am studying Topic 4: Economic Policies and Management. Explain this clearly using HSC Economics terminology but in a way that is easy to understand.
+  const sectionContext = sectionTitle ? `\nCurrent section: "${sectionTitle}"` : "";
+  return `Act as an expert NSW Year 12 HSC Economics teacher. I am studying ${topicName}.${sectionContext}
 
 The thing I do not understand is:
 ${question || "[Please fill in your question]"}
@@ -74,30 +83,32 @@ Response type I want:
 ${rtLabel}
 
 Requirements:
-- Use NSW HSC Economics language.
+- Use NSW HSC Economics language and syllabus terminology.
 - Do not use Wikipedia.
-- Explain cause and effect clearly.
-- Link the concept to economic objectives such as economic growth, full employment, price stability, external stability, income distribution and environmental sustainability where relevant.
-- Include diagrams or diagram descriptions if useful.
+- Explain cause and effect clearly with economic reasoning.
+- Link the concept to economic objectives (economic growth, full employment, price stability, external stability, income distribution, environmental sustainability) where relevant.
+- Use real-world Australian examples with specific data and dates where possible.
 - Include a short HSC-style answer or paragraph at the end.
-- Keep it simple but not childish.
-- Use examples from the Australian economy where relevant.`;
+- Keep it clear and concise — suitable for a Year 12 student.
+- If relevant, reference specific policies, institutions, or statistics from the Australian context.`;
 }
 
-export function AIModal({ isOpen, onClose, currentSectionId, onUse, addToast }: AIModalProps) {
+export function AIModal({ isOpen, onClose, currentSectionId, currentTopic, onUse, addToast }: AIModalProps) {
   const [question, setQuestion] = useState("");
   const [responseType, setResponseType] = useState("explain");
 
-  const currentSection = topic4Sections.find((s) => s.id === currentSectionId);
+  const allSections = currentTopic === "topic1" ? topic1Sections : topic4Sections;
+  const currentSection = allSections.find((s) => s.id === currentSectionId);
+  const topicName = topicNames[currentTopic];
 
   const handleUseCurrent = () => {
     if (currentSection) {
-      setQuestion(`I am studying "${currentSection.title}" in Topic 4: Economic Policies and Management. Please help me understand this topic.`);
+      setQuestion(`I am studying "${currentSection.title}" in ${topicName}. Please help me understand this topic.`);
     }
   };
 
   const handleAIClick = async (platform: (typeof aiPlatforms)[0]) => {
-    const prompt = buildPrompt(question, responseType);
+    const prompt = buildPrompt(question, responseType, topicName, currentSection?.title);
     try {
       await navigator.clipboard.writeText(prompt);
       onUse();
@@ -133,7 +144,7 @@ export function AIModal({ isOpen, onClose, currentSectionId, onUse, addToast }: 
                 </div>
                 <div>
                   <h2 className="font-semibold text-white text-sm">Ask AI</h2>
-                  <p className="text-xs text-slate-400">Get help with HSC Economics</p>
+                  <p className="text-xs text-slate-400">{topicName}</p>
                 </div>
               </div>
               <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-white transition-colors">
@@ -214,7 +225,7 @@ export function AIModal({ isOpen, onClose, currentSectionId, onUse, addToast }: 
                   <label className="text-xs font-medium text-slate-400 uppercase tracking-wide">Generated prompt preview</label>
                   <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3">
                     <p className="text-xs text-slate-400 leading-relaxed line-clamp-4 font-mono">
-                      {buildPrompt(question, responseType)}
+                      {buildPrompt(question, responseType, topicName, currentSection?.title)}
                     </p>
                   </div>
                 </div>

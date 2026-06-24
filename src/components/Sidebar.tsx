@@ -8,10 +8,13 @@ import {
   Moon,
   RotateCcw,
   GraduationCap,
+  Globe,
+  Building2,
 } from "lucide-react";
 import { topic4Sections } from "../data/topic4Content";
+import { topic1Sections } from "../data/topic1Content";
 import * as LucideIcons from "lucide-react";
-import type { AppState } from "../hooks/useAppState";
+import type { AppState, TopicId } from "../hooks/useAppState";
 
 type PageType = "dashboard" | "study" | "glossary" | "essay-planner" | "paragraph-builder";
 
@@ -23,6 +26,7 @@ interface SidebarProps {
   resetName: () => void;
   currentSectionId: string;
   setCurrentSection: (id: string) => void;
+  setCurrentTopic: (topic: TopicId) => void;
 }
 
 const navItems = [
@@ -33,6 +37,11 @@ const navItems = [
   { id: "paragraph-builder" as PageType, label: "Paragraph Builder", icon: AlignLeft },
 ];
 
+const topics: { id: TopicId; label: string; short: string; icon: React.ElementType }[] = [
+  { id: "topic1", label: "Topic 1: Global Economy", short: "Topic 1", icon: Globe },
+  { id: "topic4", label: "Topic 4: Economic Policy", short: "Topic 4", icon: Building2 },
+];
+
 export function Sidebar({
   currentPage,
   setCurrentPage,
@@ -41,8 +50,10 @@ export function Sidebar({
   resetName,
   currentSectionId,
   setCurrentSection,
+  setCurrentTopic,
 }: SidebarProps) {
   const isDark = state.theme === "dark";
+  const currentSections = state.currentTopic === "topic1" ? topic1Sections : topic4Sections;
 
   return (
     <aside
@@ -58,8 +69,37 @@ export function Sidebar({
           </div>
           <div>
             <h1 className="font-bold text-sm gradient-text">EcoPilot HSC</h1>
-            <p className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>Topic 4 · Economics</p>
+            <p className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>HSC Economics</p>
           </div>
+        </div>
+      </div>
+
+      {/* Topic Switcher */}
+      <div className={`px-3 pt-4 border-b pb-3 ${isDark ? "border-slate-800" : "border-slate-100"}`}>
+        <p className={`px-3 text-xs font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+          Topic
+        </p>
+        <div className="space-y-0.5">
+          {topics.map((topic) => {
+            const Icon = topic.icon;
+            const isActive = state.currentTopic === topic.id;
+            return (
+              <button
+                key={topic.id}
+                onClick={() => { setCurrentTopic(topic.id); if (currentPage === "study") setCurrentPage("study"); }}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                  isActive
+                    ? "bg-gradient-to-r from-cyan-500/20 to-blue-500/10 text-cyan-400 border border-cyan-500/20"
+                    : isDark
+                    ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                }`}
+              >
+                <Icon size={13} className="shrink-0" />
+                <span className="truncate text-left">{topic.short}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -91,12 +131,13 @@ export function Sidebar({
       {currentPage === "study" && (
         <div className={`mt-4 px-3 border-t pt-4 ${isDark ? "border-slate-800" : "border-slate-100"}`}>
           <p className={`px-3 text-xs font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
-            Sections
+            {state.currentTopic === "topic1" ? "Topic 1 Sections" : "Topic 4 Sections"}
           </p>
           <div className="space-y-0.5">
-            {topic4Sections.map((section) => {
+            {currentSections.map((section) => {
               const IconComp = (LucideIcons as unknown as Record<string, React.ElementType>)[section.icon] || BookOpen;
-              const progress = state.sectionProgress[section.id];
+              const progressKey = `${state.currentTopic}:${section.id}`;
+              const progress = state.sectionProgress[progressKey];
               const isActive = currentSectionId === section.id;
               return (
                 <button

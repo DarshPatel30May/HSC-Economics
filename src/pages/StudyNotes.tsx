@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { topic4Sections } from "../data/topic4Content";
+import { topic1Sections } from "../data/topic1Content";
 import { quizData } from "../data/quizData";
 import * as LucideIcons from "lucide-react";
 import type { AppState, SectionProgress } from "../hooks/useAppState";
@@ -25,6 +26,7 @@ interface StudyNotesProps {
   markSectionConfused: (id: string) => void;
   updateNotes: (id: string, notes: string) => void;
   saveQuizResult: (id: string, score: number) => void;
+  getSectionProgress: (sectionId: string) => SectionProgress | undefined;
 }
 
 function parseHtml(html: string) {
@@ -40,7 +42,7 @@ function QuizSection({
   sectionId: string;
   isDark: boolean;
   saveQuizResult: (id: string, score: number) => void;
-  existing: SectionProgress;
+  existing: SectionProgress | undefined;
 }) {
   const quiz = quizData.find((q) => q.sectionId === sectionId);
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -131,7 +133,7 @@ function QuizSection({
           Submit answers
         </button>
       )}
-      {existing.quizAttempted && !submitted && (
+      {existing?.quizAttempted && !submitted && (
         <p className={`text-xs mt-3 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
           Previous score: {existing.quizScore}%
         </p>
@@ -148,14 +150,16 @@ export function StudyNotes({
   markSectionConfused,
   updateNotes,
   saveQuizResult,
+  getSectionProgress,
 }: StudyNotesProps) {
   const isDark = state.theme === "dark";
   const [search, setSearch] = useState("");
   const [expandedSubs, setExpandedSubs] = useState<Set<string>>(new Set());
   const [showNotes, setShowNotes] = useState(false);
 
-  const currentSection = topic4Sections.find((s) => s.id === currentSectionId) || topic4Sections[0];
-  const progress = state.sectionProgress[currentSectionId];
+  const allSections = state.currentTopic === "topic1" ? topic1Sections : topic4Sections;
+  const currentSection = allSections.find((s) => s.id === currentSectionId) || allSections[0];
+  const progress = getSectionProgress(currentSectionId);
   const IconComp = (LucideIcons as unknown as Record<string, React.ElementType>)[currentSection.icon] || BookOpen;
 
   const toggleSub = (id: string) => {
@@ -168,7 +172,7 @@ export function StudyNotes({
   };
 
   const filteredSections = search
-    ? topic4Sections.filter(
+    ? allSections.filter(
         (s) =>
           s.title.toLowerCase().includes(search.toLowerCase()) ||
           s.subsections.some(
@@ -188,7 +192,7 @@ export function StudyNotes({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search notes across all sections..."
+            placeholder={`Search ${state.currentTopic === "topic1" ? "Topic 1" : "Topic 4"} notes...`}
             className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:border-cyan-500/50 transition-all ${
               isDark
                 ? "bg-slate-900 border-slate-800 text-slate-200 placeholder-slate-600"
@@ -380,9 +384,9 @@ export function StudyNotes({
             {/* Nav between sections */}
             <div className="flex items-center justify-between pt-2">
               {(() => {
-                const idx = topic4Sections.findIndex((s) => s.id === currentSectionId);
-                const prev = idx > 0 ? topic4Sections[idx - 1] : null;
-                const next = idx < topic4Sections.length - 1 ? topic4Sections[idx + 1] : null;
+                const idx = allSections.findIndex((s) => s.id === currentSectionId);
+                const prev = idx > 0 ? allSections[idx - 1] : null;
+                const next = idx < allSections.length - 1 ? allSections[idx + 1] : null;
                 return (
                   <>
                     {prev ? (

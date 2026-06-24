@@ -20,13 +20,16 @@ export default function App() {
     state,
     setStudentName,
     toggleTheme,
+    setCurrentTopic,
     toggleSectionComplete,
     markSectionConfused,
     updateNotes,
     saveQuizResult,
     incrementAIHelp,
     setCurrentSection,
+    getSectionProgress,
     getCompletionPercentage,
+    getCompletionPercentageForTopic,
     getCompletedCount,
     getNotesCount,
     getWeakestSection,
@@ -69,6 +72,7 @@ export default function App() {
         resetName={resetName}
         currentSectionId={state.currentSection}
         setCurrentSection={setCurrentSection}
+        setCurrentTopic={setCurrentTopic}
       />
 
       <main className="flex-1 min-w-0 overflow-x-hidden">
@@ -84,12 +88,14 @@ export default function App() {
               <Dashboard
                 state={state}
                 getCompletionPercentage={getCompletionPercentage}
+                getCompletionPercentageForTopic={getCompletionPercentageForTopic}
                 getCompletedCount={getCompletedCount}
                 getNotesCount={getNotesCount}
                 getWeakestSection={getWeakestSection}
                 getNextIncompleteSection={getNextIncompleteSection}
                 setCurrentPage={setCurrentPage}
                 setCurrentSection={setCurrentSection}
+                setCurrentTopic={setCurrentTopic}
               />
             )}
             {currentPage === "study" && (
@@ -101,6 +107,7 @@ export default function App() {
                 markSectionConfused={markSectionConfused}
                 updateNotes={updateNotes}
                 saveQuizResult={saveQuizResult}
+                getSectionProgress={getSectionProgress}
               />
             )}
             {currentPage === "glossary" && <Glossary state={state} />}
@@ -133,6 +140,7 @@ export default function App() {
         isOpen={aiModalOpen}
         onClose={() => setAiModalOpen(false)}
         currentSectionId={state.currentSection}
+        currentTopic={state.currentTopic}
         onUse={() => {
           incrementAIHelp();
           setAiModalOpen(false);
